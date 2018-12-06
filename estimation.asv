@@ -19,16 +19,37 @@ for f = 1:N
     S(f).clustered = clustered; % cluster indeces
 end
 
-% determine mode cluster for each pixel
+% Determine mode cluster for each pixel
 [m,n] = size(S(1).image);
-acc = zeros(m,n,k);
+modes = zeros(m,n);
 for i = 1:m
     for j = 1:n
+        acc = zeros(k, 1);
         for f = 1:N
-            acc(i,j,S(f).clustered(i,j)) = acc(i,j,S(f).clustered(i,j)) + 1;
+            acc(S(f).clustered(i,j)) = acc(S(f).clustered(i,j)) + 1;
         end
-        
+        [maxVal, maxIdx] = max(acc);
+        modes(i,j) = maxIdx;
     end
 end
 
+% Find average pixel intensity from frames with mode cluster
+estimated = zeros(m,n);
+for i = 1:m
+    for j = 1:n
+        count = 0;
+        for f = 1:N
+            if S(f).clustered(i,j) == modes(i,j)
+               estimated(i,j) = estimated(i,j) + S(f).image(i,j);
+               count = count + 1;
+            end
+        end
+        if count == 0
+            estimated(i,j) = estimated(i,j) / count;
+        else
+            
+        end
+    end
+end
 
+figure, imshow(uint8(estimated));
