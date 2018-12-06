@@ -1,8 +1,8 @@
 close all;
 clear;
 
-D = 'images'; % directory where the files are saved
-S = dir(fullfile(D, 'simple_test_*.jpeg')); % pattern to match filenames
+D = 'Landscapes/classroom'; % directory where the files are saved
+S = dir(fullfile(D, '*.jpg')); % pattern to match filenames
 N = numel(S); % number of images (frames)
 k = 5;
 
@@ -10,7 +10,7 @@ for f = 1:N
     % Read image, convert to grayscale
     F = fullfile(D, S(f).name);
     Img = imread(F);
-    I = double(rgb2gray(Img));
+    I = double(Img);
     S(f).image = I;
     %figure, imshow(I);
     
@@ -33,23 +33,19 @@ for i = 1:m
     end
 end
 
-% Find average pixel intensity from frames with mode cluster
+% Find median pixel intensity from frames with mode cluster
 estimated = zeros(m,n);
 for i = 1:m
     for j = 1:n
-        count = 0;
+        intensities = zeros(N, 1);
         for f = 1:N
             if S(f).clustered(i,j) == modes(i,j)
-               estimated(i,j) = estimated(i,j) + S(f).image(i,j);
-               count = count + 1;
+               intensities(f) = S(f).image(i,j);
             end
         end
-        if count == 0
-            estimated(i,j) = estimated(i,j) / count;
-        else
-            
-        end
+        
+        estimated(i,j) = median(intensities(intensities ~=0));
     end
 end
 
-figure, imshow(uint8(estimated));
+figure, imshow(uint8(estimated), 'InitialMagnification', 300);
