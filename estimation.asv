@@ -17,8 +17,6 @@ for k = 1:N
     [idx, C] = kmeans(I, 5);
     S(k).idx = idx; % cluster indeces
     S(k).C = C; 	% cluster centroid locations
-
-    
 end
 
 % perform clustering on each frame
