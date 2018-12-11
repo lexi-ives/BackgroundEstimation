@@ -3,7 +3,7 @@ clear;
 
 % Delcare variables
 % -----------------
-D = 'Landscapes/desert'; % directory where the files are saved
+D = 'images/brush'; % directory where the files are saved
 S = dir(fullfile(D, '*.jpg')); % pattern to match filenames
 N = numel(S); % number of images (frames)
 
@@ -21,43 +21,36 @@ end
 
 % Determine cluster seed starting locations for k-means
 % -----------------------------------------------------
-k = 5;                          % number of clusters
-initialCenters = zeros(k, 1);   % inital seed locations
-diagonal = diag(S(1).image);    % vector of the diagonal of the image
-regionSize = (int) size(diagonal) / k;
+k = 5;                              % number of clusters
+initialCenters = zeros(k, 1);       % inital centroid locations
+partitionSize = floor((m*n) / k);   % distance between centroids
 for i = 1:k
-    initialCenters[i] = diagonal[]
+    initialCenters(i) = i * partitionSize;
 end
-
-% minc = min(S(1).image, 1);
-% maxc = max(S(1).image, 1);
-% nsamp = m;
-% r = minc;%repmat(minc, nsamp, 1);
-% x = (maxc - minc) ./ (nsamp-1);
-% b = bsxfun(@times, (0:nsamp-1).', x);
-% initialCenters = r + b;
 
 % Perform k-means clustering
 % --------------------------
 sigma = 4;  % for gaussian blur
 for f = 1:N
     I = imgaussfilt(I, sigma);
-    [clustered, centroids] = kmeans(I(:), k);%, 'Start', initialCenters);
+    [clustered, centroids] = kmeans(I(:), k, 'Start', initialCenters);
     clustered = reshape(clustered, size(I));
     S(f).clustered = clustered; % cluster indeces
 end
 
 % Determine mode cluster at each pixel
 % -------------------------------------
-modes = zeros(m,n);
+modes = zeros(m,n); % mode cluster indeces
 for i = 1:m
     for j = 1:n
+        % calculate how many times each cluster occurs for this pixel
         acc = zeros(k, 1);
         for f = 1:N
             acc(S(f).clustered(i,j)) = acc(S(f).clustered(i,j)) + 1;
         end
         [maxVal, maxIdx] = max(acc);
         
+        % determine if there is a single max, if not set mode to 0
         z = size(find(acc == maxVal));
         if (z(1) > 1)
             modes(i,j) = 0;
@@ -72,6 +65,7 @@ end
 estimated = zeros(m,n);
 for i = 1:m
     for j = 1:n
+        % set pixel to 0 if it does not have a mode cluster
         if modes(i,j) == 0
             estimated(i,j) = 0;
         else
