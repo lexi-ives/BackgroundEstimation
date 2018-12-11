@@ -3,7 +3,7 @@ clear;
 
 % Delcare variables
 % -----------------
-D = 'images/brush';             % directory where the files are saved
+D = 'images/desert';         % directory where the files are saved
 S = dir(fullfile(D, '*.jpg'));  % pattern to match filenames
 N = numel(S);                   % number of images (frames)
 
@@ -21,7 +21,7 @@ end
 
 % Determine cluster seed starting locations for k-means
 % -----------------------------------------------------
-k = 5;                              % number of clusters
+k = 20;                              % number of clusters
 initialCenters = zeros(k, 1);       % inital centroid locations
 partitionSize = floor((m*n) / k);   % distance between centroids
 for i = 1:k
@@ -84,4 +84,12 @@ for i = 1:m
     end
 end
 
+% Fill in unknown pixels using linear interpolation
+% -------------------------------------------------
+data = estimated;
+data(data == 0) = NaN;
+final = fillmissing(data,'linear');
+
+
 figure, imshow(uint8(estimated), 'InitialMagnification', 200);
+figure, imshow(uint8(final), 'InitialMagnification', 200);
