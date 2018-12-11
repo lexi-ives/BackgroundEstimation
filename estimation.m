@@ -1,29 +1,45 @@
 close all;
 clear;
 
-D = 'Landscapes/desert'; % directory where the files are saved
+% Delcare variables
+% -----------------
+D = 'Landscapes/classroom'; % directory where the files are saved
 S = dir(fullfile(D, '*.jpg')); % pattern to match filenames
 N = numel(S); % number of images (frames)
-k = 5; % for k-means clustering
-sigma = 4;  % for gaussian blur
 
+% Read images
+% -----------
 for f = 1:N
-    % Read image, convert to grayscale
     F = fullfile(D, S(f).name);
     Img = imread(F);
-    %Img = rgb2gray(Img);
+    %Img = rgb2gray(Img);   % uncomment for rgb images
+    
     I = double(Img);
     S(f).image = I;
-    %figure, imshow(I);
-    
-    % Perform k-means clustering
+end
+[m,n] = size(S(1).image);
+
+% Determine cluster seed starting locations for k-means
+% -----------------------------------------------------
+k = 5;                              % number of clusters
+initialCenters = zeros(k, 1);       % inital centroid locations
+partitionSize = floor((m*n) / k);   % distance between centroids
+for i = 1:k
+    initialCenters(i) = i * partitionSize;
+end
+
+% Perform k-means clustering
+% --------------------------
+sigma = 4;  % for gaussian blur
+for f = 1:N
     I = imgaussfilt(I, sigma);
-    clustered = reshape(kmeans(I(:), 5), size(I));
+    [clustered, centroids] = kmeans(I(:), k, 'Start', initialCenters);
+    clustered = reshape(clustered, size(I));
     S(f).clustered = clustered; % cluster indeces
 end
 
-% Determine mode cluster for each pixel
-[m,n] = size(S(1).image);
+% Determine mode cluster at each pixel
+% -------------------------------------
 modes = zeros(m,n);
 for i = 1:m
     for j = 1:n
@@ -43,10 +59,13 @@ for i = 1:m
 end
 
 % Find median pixel intensity from frames with mode cluster
+% ---------------------------------------------------------
 estimated = zeros(m,n);
 for i = 1:m
     for j = 1:n
-        if modes(i,j) ~= 0 
+        if modes(i,j) == 0
+            estimated(i,j) = 0;
+        else
             intensities = zeros(N, 1);
             for f = 1:N
                 if S(f).clustered(i,j) == modes(i,j)
@@ -54,9 +73,7 @@ for i = 1:m
                 end
             end
 
-            estimated(i,j) = median(intensities(intensities ~=0));
-        else
-           estimated(i,j) = 0; 
+            estimated(i,j) = median(intensities(intensities ~=0));            
         end
     end
 end

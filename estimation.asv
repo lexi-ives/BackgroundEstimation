@@ -1,28 +1,54 @@
 close all;
 clear;
 
+% Delcare variables
+% -----------------
 D = 'Landscapes/desert'; % directory where the files are saved
 S = dir(fullfile(D, '*.jpg')); % pattern to match filenames
 N = numel(S); % number of images (frames)
-k = 50; % for k-means clustering
-sigma = 4;  % for gaussian blur
 
+% Read images
+% -----------
 for f = 1:N
-    % Read image, convert to grayscale
     F = fullfile(D, S(f).name);
     Img = imread(F);
+    %Img = rgb2gray(Img);   % uncomment for rgb images
+    
     I = double(Img);
     S(f).image = I;
-    %figure, imshow(I);
-    
-    % Perform k-means clustering
+end
+[m,n] = size(S(1).image);
+
+% Determine cluster seed starting locations for k-means
+% -----------------------------------------------------
+k = 5;                          % number of clusters
+initialCenters = zeros(k, 1);   % inital seed locations
+diagonal = diag(S(1).image);    % vector of the diagonal of the image
+regionSize = (int) size(diagonal) / k;
+for i = 1:k
+    initialCenters[i] = diagonal[]
+end
+
+% minc = min(S(1).image, 1);
+% maxc = max(S(1).image, 1);
+% nsamp = m;
+% r = minc;%repmat(minc, nsamp, 1);
+% x = (maxc - minc) ./ (nsamp-1);
+% b = bsxfun(@times, (0:nsamp-1).', x);
+% initialCenters = r + b;
+
+% Perform k-means clustering
+% --------------------------
+sigma = 4;  % for gaussian blur
+for f = 1:N
     I = imgaussfilt(I, sigma);
-    clustered = reshape(kmeans(I(:), 5), size(I));
+    [clustered, centroids] = kmeans(I(:), k);%, 'Start', initialCenters);
+    clustered = reshape(clustered, size(I));
     S(f).clustered = clustered; % cluster indeces
 end
 
-% Determine mode cluster for each pixel
-[m,n] = size(S(1).image);
+% Determine mode cluster at each pixel
+% -------------------------------------
 modes = zeros(m,n);
 for i = 1:m
     for j = 1:n
@@ -32,7 +58,8 @@ for i = 1:m
         end
         [maxVal, maxIdx] = max(acc);
         
-        if (size(find(acc == maxval)[1] > 1)
+        z = size(find(acc == maxVal));
+        if (z(1) > 1)
             modes(i,j) = 0;
         else
             modes(i,j) = maxIdx;
@@ -41,20 +68,21 @@ for i = 1:m
 end
 
 % Find median pixel intensity from frames with mode cluster
+% ---------------------------------------------------------
 estimated = zeros(m,n);
 for i = 1:m
     for j = 1:n
-        if modes(i,j) != 0 
-        intensities = zeros(N, 1);
-        for f = 1:N
-            if S(f).clustered(i,j) == modes(i,j)
-               intensities(f) = S(f).image(i,j);
-            end
-        end
-        
-        estimated(i,j) = median(intensities(intensities ~=0));
+        if modes(i,j) == 0
+            estimated(i,j) = 0;
         else
-            
+            intensities = zeros(N, 1);
+            for f = 1:N
+                if S(f).clustered(i,j) == modes(i,j)
+                   intensities(f) = S(f).image(i,j);
+                end
+            end
+
+            estimated(i,j) = median(intensities(intensities ~=0));            
         end
     end
 end
