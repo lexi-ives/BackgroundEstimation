@@ -3,7 +3,7 @@ clear;
 
 % Delcare variables
 % -----------------
-D = 'Landscapes/classroom'; % directory where the files are saved
+D = 'images/brush'; % directory where the files are saved
 S = dir(fullfile(D, '*.jpg')); % pattern to match filenames
 N = numel(S); % number of images (frames)
 
