@@ -7,6 +7,7 @@
 
 ### Methods
 - Capture a sequence of grayscale images from a static camera
+- Record from static camera extract images from
 - Perform clustering on each frame
 - Largest cluster with the mode intensity is chosen as the initial background
 - Distance Transform
