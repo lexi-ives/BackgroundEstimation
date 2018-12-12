@@ -9,5 +9,5 @@
 - Capture a sequence of grayscale images from a static camera
 - Perform clustering on each frame
 - Largest cluster with the mode intensity is chosen as the initial background
-- Perform edge detection to estimate features of remaining image
+- Distance Transform
 - Estimate remaining background using a distance algorithm to determine pixels that haven’t been assigned to a specific cluster
