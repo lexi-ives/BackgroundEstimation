@@ -3,7 +3,23 @@ clear;
 
 % Delcare variables
 % -----------------
-D = 'images/desert';         % directory where the files are saved
+% Change these to experiment with results
+sigma = 1;           % gaussian blur
+k = 20;              % number of clusters
+num_frames = 14;     % number of frames of video to extract
+
+% Video file
+video = 'videos/ellis.mp4';     % video file
+
+% Directory where images are to be saved 
+% Make sure it exists and has write permissions
+image_dir = 'images/ellis';
+
+% Extract images from video
+extract_images(video, image_dir, num_frames);
+
+% Or if you already have a folder of images, just use this
+D = image_dir;         
 S = dir(fullfile(D, '*.jpg'));  % pattern to match filenames
 N = numel(S);                   % number of images (frames)
 
@@ -21,7 +37,6 @@ end
 
 % Determine cluster seed starting locations for k-means
 % -----------------------------------------------------
-k = 20;                              % number of clusters
 initialCenters = zeros(k, 1);       % inital centroid locations
 partitionSize = floor((m*n) / k);   % distance between centroids
 for i = 1:k
@@ -30,7 +45,6 @@ end
 
 % Perform k-means clustering with Gaussian blur
 % ---------------------------------------------
-sigma = 4;  % for gaussian blur
 for f = 1:N
     I = imgaussfilt(I, sigma);
     [clustered, centroids] = kmeans(I(:), k, 'Start', initialCenters);
@@ -90,6 +104,10 @@ data = estimated;
 data(data == 0) = NaN;
 final = fillmissing(data,'linear');
 
+% Show
+figure, imshow(uint8(estimated));
+figure, imshow(uint8(final));
 
-figure, imshow(uint8(estimated), 'InitialMagnification', 200);
-figure, imshow(uint8(final), 'InitialMagnification', 200);
+% Save
+imwrite(uint8(estimated), 'output/composite_ellis_k20_g1.jpeg')
+imwrite(uint8(final), 'output/final_ellis_k20_g1.jpeg')
